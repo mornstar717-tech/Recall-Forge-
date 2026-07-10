@@ -1,2 +1,909 @@
-# Recall-Forge-
-A platform for easy exams memorization 
+[gemini-code-1783658719673.html](https://github.com/user-attachments/files/29875493/gemini-code-1783658719673.html)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<title>Recall Forge</title>
+<style>
+  :root, .sf-root{
+    --bg:#161310;
+    --bg-vign: radial-gradient(1200px 600px at 50% -10%, rgba(226,121,62,0.10), transparent 60%);
+    --panel:#211D18;
+    --panel-line:#3A332B;
+    --ember:#E2793E;
+    --ember-bright:#F2984F;
+    --ember-deep:#9C4A1E;
+    --steel:#8A97A0;
+    --steel-dim:#5C666D;
+    --spark:#F0C674;
+    --text:#EDE6DA;
+    --text-soft:#B4AA9A;
+    --wrong:#C25B4A;
+    --correct:#5FA36A;
+    --text-scale:1;
+  }
+  .sf-root[data-theme="ocean"]{
+    --bg:#0D1B2A; --panel:#13263B; --panel-line:#1F3A52;
+    --ember:#2EC4C4; --ember-bright:#4FDCDC; --ember-deep:#0F6B6B;
+    --steel:#7FA8C9; --steel-dim:#4A6C87; --spark:#8ED1E8;
+    --text:#E4EEF5; --text-soft:#9FB8CB; --wrong:#D9695C; --correct:#4FBE83;
+    --bg-vign: radial-gradient(1200px 600px at 50% -10%, rgba(46,196,196,0.10), transparent 60%);
+  }
+  .sf-root[data-theme="botanical"]{
+    --bg:#141C14; --panel:#1D2A1D; --panel-line:#324832;
+    --ember:#8FBE55; --ember-bright:#A8D66C; --ember-deep:#5C7E34;
+    --steel:#8FA98A; --steel-dim:#5C7259; --spark:#E0C15C;
+    --text:#EAF0E3; --text-soft:#AABBA0; --wrong:#C2604A; --correct:#6FA85C;
+    --bg-vign: radial-gradient(1200px 600px at 50% -10%, rgba(143,190,85,0.10), transparent 60%);
+  }
+  .sf-root[data-theme="royal"]{
+    --bg:#1B1526; --panel:#251E33; --panel-line:#3C324F;
+    --ember:#D8A73D; --ember-bright:#F0C463; --ember-deep:#8C6A1E;
+    --steel:#9C8FB0; --steel-dim:#645777; --spark:#E8C773;
+    --text:#EFE9F5; --text-soft:#B8ACC9; --wrong:#C2604A; --correct:#6FA85C;
+    --bg-vign: radial-gradient(1200px 600px at 50% -10%, rgba(216,167,61,0.10), transparent 60%);
+  }
+
+  *{box-sizing:border-box;}
+  body { margin:0; padding:0; background:var(--bg); }
+  .sf-root{
+    font-family:'Iowan Old Style','Palatino Linotype',Georgia,serif;
+    background-color:var(--bg);
+    background-image: var(--bg-vign);
+    color:var(--text);
+    min-height:100vh;
+    padding:0;
+    position:relative;
+  }
+  .sf-shell{ max-width:1040px; margin:0 auto; padding:30px 22px 60px; }
+  .sf-header{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    border-bottom:2px solid var(--panel-line);
+    padding-bottom:16px; margin-bottom:18px;
+    flex-wrap:wrap; gap:10px;
+  }
+  .sf-brand{ display:flex; align-items:center; gap:16px; }
+  .sf-seal{
+    width:48px;height:48px;border-radius:50%;
+    background: radial-gradient(circle at 32% 28%, var(--ember-bright), var(--ember) 55%, var(--ember-deep) 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: 0 0 0 2px var(--panel-line), 0 0 18px rgba(226,121,62,0.45);
+    font-family:'Rockwell','Roboto Slab',Georgia,serif; font-weight:700; color:#1A130C; font-size:17px;
+    flex-shrink:0;
+  }
+  .sf-title h1{
+    font-family:'Rockwell','Roboto Slab','Playfair Display',Georgia,serif;
+    font-size:calc(27px * var(--text-scale)); margin:0; letter-spacing:.3px; color:var(--text);
+  }
+  .sf-title p{ margin:3px 0 0; font-size:calc(12.5px * var(--text-scale)); color:var(--text-soft); letter-spacing:.4px; font-style:italic;}
+  .sf-tag{
+    font-family:'Courier New',monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--bg); background:var(--spark);
+    padding:6px 11px; border-radius:2px;
+  }
+
+  .sf-menu-wrap{ position:relative; flex-shrink:0; }
+  .sf-menu-btn{
+    width:42px; height:42px; border-radius:6px; background:var(--panel);
+    border:1px solid var(--panel-line); cursor:pointer; display:flex;
+    flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    transition: border-color .15s ease;
+  }
+  .sf-menu-btn:hover{ border-color:var(--ember); }
+  .sf-menu-btn span{
+    display:block; width:20px; height:2px; border-radius:2px; background:var(--ember);
+    transition: transform .2s ease, opacity .2s ease;
+  }
+  .sf-menu-btn span:nth-child(2){ width:14px; align-self:center; margin-right:6px; }
+  .sf-menu-btn.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); width:20px; }
+  .sf-menu-btn.open span:nth-child(2){ opacity:0; }
+  .sf-menu-btn.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); width:20px; }
+
+  .sf-menu-popup{
+    position:absolute; top:calc(100% + 10px); right:0; z-index:50;
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:8px;
+    min-width:190px; padding:8px; box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    display:none; flex-direction:column; gap:2px;
+  }
+  .sf-menu-popup.open{ display:flex; }
+  .sf-menu-item{
+    font-family:'Courier New',monospace; font-size:12px; text-transform:uppercase; letter-spacing:1.2px;
+    padding:12px 14px; background:transparent; border:none; color:var(--steel); cursor:pointer;
+    text-align:left; border-radius:5px; transition: color .15s ease, background .15s ease; width:100%;
+  }
+  .sf-menu-item:hover{ background:#00000030; color:var(--ember-bright); }
+  .sf-menu-item.active{ color:var(--ember-bright); background:#00000030; font-weight:bold; }
+  .sf-view{ display:none; }
+  .sf-view.active{ display:block; }
+
+  .sf-grid{ display:grid; grid-template-columns: 340px 1fr; gap:24px; }
+  @media (max-width:820px){ .sf-grid{ grid-template-columns:1fr; } }
+
+  .sf-panel{
+    background:var(--panel); border:1px solid var(--panel-line);
+    border-radius:6px; padding:20px; position:relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .sf-panel::before{
+    content:''; position:absolute; top:10px; right:10px; width:16px; height:16px;
+    border-top:2px solid var(--ember); border-right:2px solid var(--ember); opacity:.6;
+  }
+  .sf-label{
+    font-family:'Courier New',monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:1.4px; color:var(--steel); margin-bottom:7px; display:block;
+  }
+  .sf-select, .sf-textarea, .sf-input{
+    width:100%; font-family:'Iowan Old Style',Georgia,serif; font-size:calc(14px * var(--text-scale)); color:var(--text);
+    background:#00000030; border:1px solid var(--panel-line); border-radius:4px;
+    padding:10px 11px; margin-bottom:15px;
+  }
+  .sf-select:focus, .sf-textarea:focus, .sf-input:focus{ outline:2px solid var(--ember); outline-offset:1px; }
+  .sf-textarea{ min-height:170px; resize:vertical; line-height:1.5; }
+  .sf-modes{ display:flex; gap:7px; margin-bottom:15px; flex-wrap:wrap; }
+  .sf-mode-btn{
+    flex:1; min-width:90px; font-family:'Courier New',monospace; font-size:11px;
+    text-transform:uppercase; letter-spacing:.8px; padding:10px 6px; border-radius:4px;
+    border:1px solid var(--panel-line); background:#00000030; color:var(--steel); cursor:pointer;
+    transition: all .15s ease;
+  }
+  .sf-mode-btn:hover{ border-color:var(--ember); color:var(--ember-bright); }
+  .sf-mode-btn.active{ background:var(--ember); color:#1A130C; border-color:var(--ember); font-weight:bold; }
+  .sf-count-row{ display:flex; gap:10px; align-items:center; margin-bottom:17px; }
+  .sf-count-row input{
+    width:58px; padding:7px; border:1px solid var(--panel-line); border-radius:4px;
+    font-family:inherit; background:#00000030; color:var(--text);
+  }
+  .sf-btn{
+    background:var(--ember); color:#1A130C; border:none; border-radius:5px;
+    padding:12px 18px; font-family:'Courier New',monospace; font-size:12px;
+    letter-spacing:1.4px; text-transform:uppercase; cursor:pointer; font-weight:bold;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .sf-btn:hover{ background:var(--ember-bright); transform:translateY(-1px); }
+  .sf-btn.sf-btn-ghost{ background:transparent; color:var(--steel); border:1px solid var(--panel-line); }
+  .sf-btn.sf-btn-ghost:hover{ color:var(--wrong); border-color:var(--wrong); background:transparent; transform:none; }
+  .sf-btn.sf-btn-small{ padding:7px 12px; font-size:10.5px; }
+  .sf-generate{ width:100%; }
+  .sf-generate:disabled{ opacity:.5; cursor:wait; }
+  .sf-error{ color:var(--wrong); font-size:12.5px; margin-top:10px; font-style:italic; }
+  .sf-saved{ margin-top:18px; }
+  .sf-saved-item{
+    font-size:12.5px; padding:8px 9px; border:1px dashed var(--panel-line); border-radius:4px;
+    cursor:pointer; margin-bottom:6px; display:flex; justify-content:space-between; gap:6px;
+    color:var(--text-soft); transition: border-color .15s ease;
+  }
+  .sf-saved-item:hover{ background:#00000030; border-color:var(--ember); }
+  .sf-saved-del{ color:var(--wrong); font-family:'Courier New',monospace; cursor:pointer; }
+
+  .sf-main-empty{
+    display:flex; align-items:center; justify-content:center; height:100%;
+    min-height:340px; color:var(--text-soft); font-style:italic; text-align:center; padding:30px;
+  }
+  .sf-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; }
+  .sf-card-wrap{ display:flex; flex-direction:column; gap:8px; }
+
+  .sf-card{ perspective:1200px; height:190px; }
+  .sf-card-inner{
+    position:relative; width:100%; height:100%; transition:transform .5s;
+    transform-style:preserve-3d; cursor:pointer;
+  }
+  .sf-card.flipped .sf-card-inner{ transform:rotateY(180deg); }
+  .sf-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    background:#00000030; border:1px solid var(--panel-line); border-radius:6px; padding:16px;
+    display:flex; flex-direction:column;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
+  .sf-face::after{
+    content:''; position:absolute; top:0; right:0; width:0; height:0;
+    border-style:solid; border-width:0 22px 22px 0;
+    border-color:transparent var(--ember) transparent transparent;
+  }
+  .sf-face-front .sf-idx{
+    font-family:'Courier New',monospace; font-size:10.5px; color:var(--steel);
+    letter-spacing:1px; margin-bottom:8px;
+  }
+  .sf-face-front .sf-q{ font-size:calc(15px * var(--text-scale)); line-height:1.4; overflow-y:auto; flex:1; color:var(--text); }
+  .sf-face-back{ transform:rotateY(180deg); background:linear-gradient(160deg, var(--ember-deep), #00000060); border-color:var(--ember); }
+  .sf-face-back .sf-a{ font-size:calc(14px * var(--text-scale)); line-height:1.5; overflow-y:auto; flex:1; color:#FBEFE2; }
+  .sf-face-back .sf-idx{ font-family:'Courier New',monospace; font-size:10.5px; color:var(--spark); margin-bottom:8px; }
+  .sf-hint{ font-size:10.5px; color:var(--steel-dim); text-align:center; margin-top:6px; font-family:'Courier New',monospace;}
+
+  .sf-mcq{ border:1px solid var(--panel-line); background:var(--panel); border-radius:6px; margin-bottom:16px; overflow:hidden; }
+  .sf-mcq-q{ padding:15px 17px; font-size:calc(15px * var(--text-scale)); border-bottom:1px solid var(--panel-line); display:flex; gap:10px; color:var(--text); }
+  .sf-mcq-idx{ font-family:'Courier New',monospace; color:var(--ember); font-weight:bold; flex-shrink:0; }
+  .sf-mcq-opts{ padding:11px 17px 15px; }
+  .sf-opt{
+    display:block; width:100%; text-align:left; padding:10px 13px; margin-bottom:7px; border-radius:4px;
+    background:#00000030; border:1px solid var(--panel-line); cursor:pointer; font-family:inherit; font-size:calc(13.5px * var(--text-scale));
+    color:var(--text); transition: border-color .15s ease;
+  }
+  .sf-opt:hover:not(:disabled){ border-color:var(--ember); }
+  .sf-opt.correct{ background:rgba(95,163,106,0.18); border-color:var(--correct); color:#CFEBD2; }
+  .sf-opt.wrong{ background:rgba(194,91,74,0.18); border-color:var(--wrong); color:#F5D6D0; }
+  .sf-opt:disabled{ cursor:default; }
+  .sf-explain{ padding:0 17px 12px; font-size:calc(12.5px * var(--text-scale)); color:var(--text-soft); font-style:italic; }
+
+  .sf-feynman{ border-left:3px solid var(--ember); background:var(--panel); border-radius:0 6px 6px 0; padding:17px 19px; margin-bottom:14px; }
+  .sf-feynman .sf-idx{ font-family:'Courier New',monospace; font-size:10.5px; color:var(--steel); margin-bottom:6px; }
+  .sf-feynman .sf-prompt{ font-size:calc(15px * var(--text-scale)); margin-bottom:10px; color:var(--text); }
+  .sf-feynman textarea{
+    width:100%; min-height:70px; border:1px solid var(--panel-line); border-radius:4px; padding:9px;
+    font-family:inherit; font-size:calc(13.5px * var(--text-scale)); background:#00000030; color:var(--text);
+  }
+  .sf-feynman .sf-toggle{
+    font-family:'Courier New',monospace; font-size:11px; color:var(--ember-bright); text-transform:uppercase;
+    letter-spacing:1px; cursor:pointer; margin-top:9px; display:inline-block;
+  }
+  .sf-feynman .sf-model{ font-size:calc(13px * var(--text-scale)); margin-top:8px; padding:11px; background:#00000030; border:1px dashed var(--panel-line); border-radius:4px; color:var(--text-soft); }
+
+  .sf-loader{ text-align:center; padding:60px 20px; color:var(--text-soft); font-style:italic; }
+
+  .sf-ask{ padding:0 17px 15px; }
+  .sf-card-wrap .sf-ask{ padding:0; }
+  .sf-ask-btn{
+    font-family:'Courier New',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--spark); background:transparent; border:1px solid var(--panel-line); border-radius:4px;
+    padding:7px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:border-color .15s ease;
+  }
+  .sf-ask-btn:hover{ border-color:var(--spark); }
+  .sf-ask-panel{ margin-top:9px; display:none; }
+  .sf-ask-panel.open{ display:block; }
+  .sf-ask-row{ display:flex; gap:7px; }
+  .sf-ask-input{
+    flex:1; font-family:inherit; font-size:calc(13px * var(--text-scale)); color:var(--text);
+    background:#00000030; border:1px solid var(--panel-line); border-radius:4px; padding:8px 10px;
+  }
+  .sf-ask-input:focus{ outline:2px solid var(--ember); outline-offset:1px; }
+  .sf-ask-send{
+    background:var(--spark); color:#1A130C; border:none; border-radius:4px; padding:0 14px;
+    font-family:'Courier New',monospace; font-size:11px; text-transform:uppercase; cursor:pointer; font-weight:bold;
+  }
+  .sf-ask-send:disabled{ opacity:.5; cursor:wait; }
+  .sf-ask-response{
+    margin-top:9px; font-size:calc(13px * var(--text-scale)); line-height:1.5; color:var(--text-soft);
+    background:#00000030; border-left:2px solid var(--spark); padding:9px 11px; display:none;
+  }
+
+  .sf-notes-grid{ display:grid; grid-template-columns: 1fr 1.3fr; gap:24px; }
+  @media (max-width:820px){ .sf-notes-grid{ grid-template-columns:1fr; } }
+  .sf-note-item{
+    padding:12px 13px; border:1px solid var(--panel-line); border-radius:5px; margin-bottom:9px;
+    cursor:pointer; transition:border-color .15s ease;
+  }
+  .sf-note-item:hover{ border-color:var(--ember); }
+  .sf-note-item.active{ border-color:var(--ember); background:#00000030; }
+  .sf-note-item-title{ font-size:calc(14px * var(--text-scale)); color:var(--text); margin-bottom:3px; }
+  .sf-note-item-meta{ font-family:'Courier New',monospace; font-size:10px; color:var(--steel-dim); text-transform:uppercase; letter-spacing:.6px; }
+  .sf-note-empty{ color:var(--text-soft); font-style:italic; font-size:13px; padding:14px 4px; }
+  .sf-note-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+
+  .sf-settings-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-bottom:1px solid var(--panel-line); flex-wrap:wrap; }
+  .sf-settings-row:last-child{ border-bottom:none; }
+  .sf-settings-label{ font-size:calc(14.5px * var(--text-scale)); color:var(--text); }
+  .sf-settings-desc{ font-size:calc(12px * var(--text-scale)); color:var(--text-soft); margin-top:3px; }
+  .sf-settings-control{ flex-shrink:0; min-width:180px; }
+  .sf-settings-msg{ font-size:12px; color:var(--correct); margin-top:8px; display:none; }
+  .sf-font-opts{ display:flex; gap:6px; }
+  .sf-font-btn{
+    font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:1px;
+    padding:8px 13px; border-radius:4px; border:1px solid var(--panel-line); background:#00000030;
+    color:var(--steel); cursor:pointer; font-size:11px;
+  }
+  .sf-font-btn.active{ background:var(--ember); color:#1A130C; border-color:var(--ember); font-weight:bold; }
+  .sf-theme-opts{ display:flex; gap:10px; }
+  .sf-theme-swatch{
+    width:34px; height:34px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sf-theme-swatch.active{ border-color:var(--text); }
+  .sf-theme-swatch[data-theme="forge"]{ background:radial-gradient(circle at 32% 28%, #F2984F, #E2793E 55%, #9C4A1E 100%); }
+  .sf-theme-swatch[data-theme="ocean"]{ background:radial-gradient(circle at 32% 28%, #4FDCDC, #2EC4C4 55%, #0F6B6B 100%); }
+  .sf-theme-swatch[data-theme="botanical"]{ background:radial-gradient(circle at 32% 28%, #A8D66C, #8FBE55 55%, #5C7E34 100%); }
+  .sf-theme-swatch[data-theme="royal"]{ background:radial-gradient(circle at 32% 28%, #F0C463, #D8A73D 55%, #8C6A1E 100%); }
+  .sf-file-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .sf-file-name{ font-size:12px; color:var(--text-soft); font-style:italic; }
+</style>
+</head>
+<body>
+<div class="sf-root" id="sf-root" data-theme="forge">
+  <div class="sf-shell">
+    <div class="sf-header">
+      <div class="sf-brand">
+        <div class="sf-seal">M</div>
+        <div class="sf-title">
+          <h1>Recall Forge</h1>
+          <p>Active recall, built from your own notes</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="sf-tag">Mornstar · Study Session</div>
+        <div class="sf-menu-wrap">
+          <button class="sf-menu-btn" id="sf-menu-btn" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="sf-menu-popup" id="sf-menu-popup">
+            <button class="sf-menu-item active" data-tab="home">Home</button>
+            <button class="sf-menu-item" data-tab="notes">Notes</button>
+            <button class="sf-menu-item" data-tab="settings">Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-view active" id="sf-view-home">
+      <div class="sf-grid">
+        <div class="sf-panel">
+          <span class="sf-label">Course</span>
+          <select class="sf-select" id="sf-course">
+            <option>BCPC 112 — Business Statistics</option>
+            <option>BGEC 106 — Logic &amp; Critical Thinking</option>
+            <option>BGEC 102 — Scholarly Writing</option>
+            <option>BCAD 108 — Business French</option>
+            <option>IMGT — Principles of Management</option>
+            <option>Custom / Other</option>
+          </select>
+
+          <span class="sf-label">Paste notes or a topic</span>
+          <textarea class="sf-textarea" id="sf-notes" placeholder="Paste slide content, a definition, a formula, or just a topic name..."></textarea>
+
+          <span class="sf-label">Mode</span>
+          <div class="sf-modes">
+            <button class="sf-mode-btn active" data-mode="flashcards">Flashcards</button>
+            <button class="sf-mode-btn" data-mode="quiz">Quiz (MCQ)</button>
+            <button class="sf-mode-btn" data-mode="feynman">Feynman</button>
+          </div>
+
+          <div class="sf-count-row">
+            <span class="sf-label" style="margin:0;">How many</span>
+            <input type="number" id="sf-count" value="6" min="3" max="12">
+          </div>
+
+          <button class="sf-btn sf-generate" id="sf-generate">Generate set</button>
+          <div class="sf-error" id="sf-error" style="display:none;"></div>
+
+          <div class="sf-saved" id="sf-saved"></div>
+        </div>
+
+        <div class="sf-panel" id="sf-main">
+          <div class="sf-main-empty">Your generated set will appear here.<br>Pick a course, paste something to study, choose a mode, and generate.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-view" id="sf-view-notes">
+      <div class="sf-notes-grid">
+        <div class="sf-panel">
+          <span class="sf-label">Saved notes</span>
+          <div id="sf-notes-list"><div class="sf-note-empty">No notes saved yet.</div></div>
+          <button class="sf-btn" id="sf-note-new" style="margin-top:8px;">New note</button>
+        </div>
+        <div class="sf-panel">
+          <span class="sf-label">Title</span>
+          <input class="sf-input" id="sf-note-title" placeholder="e.g. BCPC 112 — Measures of dispersion">
+          <span class="sf-label">Content</span>
+          <textarea class="sf-textarea" id="sf-note-body" style="min-height:260px;" placeholder="Write or paste the note you want to keep here..."></textarea>
+          <div class="sf-note-actions">
+            <button class="sf-btn" id="sf-note-save">Save note</button>
+            <button class="sf-btn sf-btn-ghost" id="sf-note-use">Use in Home</button>
+            <button class="sf-btn sf-btn-ghost" id="sf-note-delete">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-view" id="sf-view-settings">
+      <div class="sf-panel" style="max-width:620px;">
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">API Key (Anthropic)</div>
+            <div class="sf-settings-desc">Required to communicate with the AI model outside the sandbox</div>
+          </div>
+          <input type="password" class="sf-input sf-settings-control" id="sf-api-key" placeholder="sk-ant-..." style="margin-bottom:0;">
+        </div>
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">Font size</div>
+            <div class="sf-settings-desc">Adjusts text size across the whole app</div>
+          </div>
+          <div class="sf-font-opts sf-settings-control" id="sf-font-opts">
+            <button class="sf-font-btn" data-scale="0.9">S</button>
+            <button class="sf-font-btn active" data-scale="1">M</button>
+            <button class="sf-font-btn" data-scale="1.2">L</button>
+          </div>
+        </div>
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">Theme colours</div>
+            <div class="sf-settings-desc">Forge, Ocean, Botanical, or Royal</div>
+          </div>
+          <div class="sf-theme-opts sf-settings-control" id="sf-theme-opts">
+            <div class="sf-theme-swatch active" data-theme="forge" title="Forge"></div>
+            <div class="sf-theme-swatch" data-theme="ocean" title="Ocean"></div>
+            <div class="sf-theme-swatch" data-theme="botanical" title="Botanical"></div>
+            <div class="sf-theme-swatch" data-theme="royal" title="Royal"></div>
+          </div>
+        </div>
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">Insert your own file</div>
+            <div class="sf-settings-desc">Imports a .txt or .md file's text as a new note</div>
+          </div>
+          <div class="sf-file-row sf-settings-control">
+            <input type="file" id="sf-file-input" accept=".txt,.md,.csv" style="display:none;">
+            <button class="sf-btn sf-btn-small" id="sf-file-trigger">Choose file</button>
+            <span class="sf-file-name" id="sf-file-name"></span>
+          </div>
+        </div>
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">Clear saved generated sets</div>
+            <div class="sf-settings-desc">Removes every flashcard/quiz/Feynman set stored on Home</div>
+          </div>
+          <button class="sf-btn sf-btn-ghost sf-settings-control" id="sf-clear-sets">Clear sets</button>
+        </div>
+        <div class="sf-settings-row">
+          <div>
+            <div class="sf-settings-label">Clear saved notes</div>
+            <div class="sf-settings-desc">Removes every note stored in the Notes tab</div>
+          </div>
+          <button class="sf-btn sf-btn-ghost sf-settings-control" id="sf-clear-notes">Clear notes</button>
+        </div>
+        <div class="sf-settings-msg" id="sf-settings-msg">Saved.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // LocalStorage helper replacing window.storage
+  const LocalStorageStorage = {
+    async get(key) {
+      const val = localStorage.getItem(key);
+      return { value: val };
+    },
+    async set(key, value) {
+      localStorage.setItem(key, value);
+    },
+    async delete(key) {
+      localStorage.removeItem(key);
+    },
+    async list(prefix) {
+      const keys = [];
+      for(let i=0; i<localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if(k.startsWith(prefix)) keys.push(k);
+      }
+      return { keys };
+    }
+  };
+
+  const state = { mode: 'flashcards', activeNoteKey: null };
+  const rootEl = document.getElementById('sf-root');
+  const notesEl = document.getElementById('sf-notes');
+  const courseEl = document.getElementById('sf-course');
+  const countEl = document.getElementById('sf-count');
+  const mainEl = document.getElementById('sf-main');
+  const errEl = document.getElementById('sf-error');
+  const genBtn = document.getElementById('sf-generate');
+  const savedEl = document.getElementById('sf-saved');
+  const apiKeyEl = document.getElementById('sf-api-key');
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  // Load API Key
+  localStorage.getItem('api_key') && (apiKeyEl.value = localStorage.getItem('api_key'));
+  apiKeyEl.addEventListener('input', () => {
+    localStorage.setItem('api_key', apiKeyEl.value.trim());
+  });
+
+  /* HAMBURGER MENU */
+  const menuBtn = document.getElementById('sf-menu-btn');
+  const menuPopup = document.getElementById('sf-menu-popup');
+  function openMenu(){ menuBtn.classList.add('open'); menuPopup.classList.add('open'); }
+  function closeMenu(){ menuBtn.classList.remove('open'); menuPopup.classList.remove('open'); }
+  menuBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(menuPopup.classList.contains('open')) closeMenu(); else openMenu();
+  });
+  document.addEventListener('click', (e)=>{
+    if(!menuPopup.contains(e.target) && e.target !== menuBtn) closeMenu();
+  });
+  document.querySelectorAll('.sf-menu-item').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.sf-menu-item').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.sf-view').forEach(v=>v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('sf-view-' + tab.dataset.tab).classList.add('active');
+      if(tab.dataset.tab === 'notes') loadNotesList();
+      closeMenu();
+    });
+  });
+
+  document.querySelectorAll('.sf-mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.sf-mode-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.mode = btn.dataset.mode;
+    });
+  });
+
+  function showError(msg){ errEl.textContent = msg; errEl.style.display = 'block'; }
+  function clearError(){ errEl.style.display='none'; errEl.textContent=''; }
+
+  function schemaFor(mode){
+    if(mode==='flashcards') return `Return ONLY a JSON array of objects: [{"q":"question or term","a":"concise answer"}]. Keep each "a" under 30 words.`;
+    if(mode==='quiz') return `Return ONLY a JSON array of objects: [{"q":"question","options":["A text","B text","C text","D text"],"correctIndex":0,"explain":"one sentence why"}]. Exactly 4 options each.`;
+    return `Return ONLY a JSON array of objects: [{"prompt":"a Feynman-technique prompt asking the learner to explain a specific idea in plain language","model":"a short model explanation, under 40 words"}]`;
+  }
+
+  async function callClaudeRaw(sys, userMsg){
+    const key = localStorage.getItem('api_key');
+    if(!key) throw new Error("Please configure your Anthropic API Key in Settings first.");
+    
+    // Note: direct browser calls require proper CORS permissions or a proxy/backend wrapper on static hosts.
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 1000,
+        system: sys,
+        messages: [{ role: "user", content: userMsg }]
+      })
+    });
+    if(!response.ok) throw new Error("The model couldn't be reached (status " + response.status + ").");
+    const data = await response.json();
+    return data.content.map(b=>b.text||'').join('\n');
+  }
+
+  async function callClaude(mode, course, notes, count){
+    const sys = `You are an exam-prep assistant. Generate exactly ${count} items for active recall study based on the course and material given. ${schemaFor(mode)} Do not include backticks or markdown formatting around the JSON.`;
+    const userMsg = `Course: ${course}\nMaterial:\n${notes || '(general foundational items)'}`;
+    const text = await callClaudeRaw(sys, userMsg);
+    const clean = text.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  }
+
+  function buildAskWidget(contextText){
+    const wrap = document.createElement('div');
+    wrap.className = 'sf-ask';
+    wrap.innerHTML = `
+      <button class="sf-ask-btn">✦ Ask AI about this</button>
+      <div class="sf-ask-panel">
+        <div class="sf-ask-row">
+          <input class="sf-ask-input" placeholder="e.g. why is this the answer?">
+          <button class="sf-ask-send">Ask</button>
+        </div>
+        <div class="sf-ask-response"></div>
+      </div>`;
+    const btn = wrap.querySelector('.sf-ask-btn');
+    const panel = wrap.querySelector('.sf-ask-panel');
+    const input = wrap.querySelector('.sf-ask-input');
+    const send = wrap.querySelector('.sf-ask-send');
+    const respBox = wrap.querySelector('.sf-ask-response');
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); panel.classList.toggle('open'); if(panel.classList.contains('open')) input.focus(); });
+    async function doAsk(){
+      const q = input.value.trim();
+      if(!q) return;
+      send.disabled = true; send.textContent = '...';
+      respBox.style.display = 'block';
+      respBox.textContent = 'Thinking…';
+      try{
+        const sys = `You are a helpful tutor answering follow-up questions about this specific item:\n${contextText}\nAnswer clearly in 2-4 sentences.`;
+        const answer = await callClaudeRaw(sys, q);
+        respBox.textContent = answer.trim();
+      }catch(err){
+        respBox.textContent = err.message || "Couldn't get an answer.";
+      }finally{
+        send.disabled = false; send.textContent = 'Ask';
+      }
+    }
+    send.addEventListener('click', (e)=>{ e.stopPropagation(); doAsk(); });
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.stopPropagation(); doAsk(); } });
+    input.addEventListener('click', (e)=> e.stopPropagation());
+    return wrap;
+  }
+
+  function renderFlashcards(items){
+    mainEl.innerHTML = '<div class="sf-cards"></div>';
+    const wrap = mainEl.querySelector('.sf-cards');
+    items.forEach((item, i)=>{
+      const outer = document.createElement('div');
+      outer.className = 'sf-card-wrap';
+      const card = document.createElement('div');
+      card.className = 'sf-card';
+      card.innerHTML = `
+        <div class="sf-card-inner">
+          <div class="sf-face sf-face-front">
+            <div class="sf-idx">CARD ${String(i+1).padStart(2,'0')}</div>
+            <div class="sf-q">${escapeHtml(item.q)}</div>
+          </div>
+          <div class="sf-face sf-face-back">
+            <div class="sf-idx">ANSWER</div>
+            <div class="sf-a">${escapeHtml(item.a)}</div>
+          </div>
+        </div>`;
+      card.addEventListener('click', ()=> card.classList.toggle('flipped'));
+      outer.appendChild(card);
+      outer.appendChild(buildAskWidget(`Question: ${item.q}\nAnswer: ${item.a}`));
+      wrap.appendChild(outer);
+    });
+    const hint = document.createElement('div');
+    hint.className = 'sf-hint';
+    hint.textContent = 'Tap a card to flip it';
+    mainEl.appendChild(hint);
+  }
+
+  function renderQuiz(items){
+    mainEl.innerHTML = '';
+    items.forEach((item, i)=>{
+      const box = document.createElement('div');
+      box.className = 'sf-mcq';
+      const optsHtml = item.options.map((opt,oi)=>`<button class="sf-opt" data-oi="${oi}">${String.fromCharCode(65+oi)}. ${escapeHtml(opt)}</button>`).join('');
+      box.innerHTML = `
+        <div class="sf-mcq-q"><span class="sf-mcq-idx">Q${i+1}</span><span>${escapeHtml(item.q)}</span></div>
+        <div class="sf-mcq-opts">${optsHtml}</div>
+        <div class="sf-explain" style="display:none;"></div>`;
+      const optButtons = box.querySelectorAll('.sf-opt');
+      optButtons.forEach(ob=>{
+        ob.addEventListener('click', ()=>{
+          const oi = parseInt(ob.dataset.oi);
+          optButtons.forEach((b2,i2)=>{
+            b2.disabled = true;
+            if(i2 === item.correctIndex) b2.classList.add('correct');
+            else if(i2 === oi) b2.classList.add('wrong');
+          });
+          const ex = box.querySelector('.sf-explain');
+          ex.textContent = item.explain || '';
+          ex.style.display = 'block';
+        });
+      });
+      const askWidget = buildAskWidget(`Question: ${item.q}\nOptions: ${item.options.join(' | ')}`);
+      askWidget.style.padding = '0 17px 15px';
+      box.appendChild(askWidget);
+      mainEl.appendChild(box);
+    });
+  }
+
+  function renderFeynman(items){
+    mainEl.innerHTML = '';
+    items.forEach((item,i)=>{
+      const box = document.createElement('div');
+      box.className = 'sf-feynman';
+      box.innerHTML = `
+        <div class="sf-idx">PROMPT ${i+1}</div>
+        <div class="sf-prompt">${escapeHtml(item.prompt)}</div>
+        <textarea placeholder="Explain it here in your own words..."></textarea>
+        <div class="sf-toggle">Show model explanation</div>
+        <div class="sf-model" style="display:none;">${escapeHtml(item.model)}</div>`;
+      box.querySelector('.sf-toggle').addEventListener('click', function(){
+        const m = box.querySelector('.sf-model');
+        const isHidden = m.style.display === 'none';
+        m.style.display = isHidden ? 'block' : 'none';
+        this.textContent = isHidden ? 'Hide model explanation' : 'Show model explanation';
+      });
+      const askWidget = buildAskWidget(`Prompt: ${item.prompt}\nModel explanation: ${item.model}`);
+      askWidget.style.marginTop = '10px';
+      box.appendChild(askWidget);
+      mainEl.appendChild(box);
+    });
+  }
+
+  function render(mode, items){
+    if(mode==='flashcards') renderFlashcards(items);
+    else if(mode==='quiz') renderQuiz(items);
+    else renderFeynman(items);
+  }
+
+  async function loadSavedList(){
+    const listRes = await LocalStorageStorage.list('set:');
+    savedEl.innerHTML = '';
+    if(!listRes.keys || listRes.keys.length===0) return;
+    const header = document.createElement('span');
+    header.className = 'sf-label';
+    header.textContent = 'Saved sets';
+    savedEl.appendChild(header);
+    for(const key of listRes.keys.slice().reverse()){
+      const res = await LocalStorageStorage.get(key);
+      try{
+        const obj = JSON.parse(res.value);
+        const row = document.createElement('div');
+        row.className = 'sf-saved-item';
+        row.innerHTML = `<span>${escapeHtml(obj.course)} · ${obj.mode} (${obj.items.length})</span><span class="sf-saved-del">✕</span>`;
+        row.querySelector('span:first-child').addEventListener('click', ()=>{
+          state.mode = obj.mode;
+          document.querySelectorAll('.sf-mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===obj.mode));
+          render(obj.mode, obj.items);
+        });
+        row.querySelector('.sf-saved-del').addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          await LocalStorageStorage.delete(key);
+          loadSavedList();
+        });
+        savedEl.appendChild(row);
+      }catch(e){}
+    }
+  }
+
+  genBtn.addEventListener('click', async ()=>{
+    clearError();
+    const notes = notesEl.value.trim();
+    const course = courseEl.value;
+    const count = Math.max(3, Math.min(12, parseInt(countEl.value)||6));
+    genBtn.disabled = true;
+    genBtn.textContent = 'Generating…';
+    mainEl.innerHTML = '<div class="sf-loader">Working through the material…</div>';
+    try{
+      const items = await callClaude(state.mode, course, notes, count);
+      render(state.mode, items);
+      const key = 'set:' + Date.now();
+      await LocalStorageStorage.set(key, JSON.stringify({course, mode: state.mode, items}));
+      loadSavedList();
+    }catch(e){
+      mainEl.innerHTML = '<div class="sf-main-empty">Something went wrong generating this set.</div>';
+      showError(e.message || 'Unexpected error.');
+    }finally{
+      genBtn.disabled = false;
+      genBtn.textContent = 'Generate set';
+    }
+  });
+
+  /* NOTES TAB */
+  const notesListEl = document.getElementById('sf-notes-list');
+  const noteTitleEl = document.getElementById('sf-note-title');
+  const noteBodyEl = document.getElementById('sf-note-body');
+
+  function clearNoteEditor(){
+    state.activeNoteKey = null;
+    noteTitleEl.value = '';
+    noteBodyEl.value = '';
+  }
+
+  async function loadNotesList(){
+    const listRes = await LocalStorageStorage.list('note:');
+    notesListEl.innerHTML = '';
+    if(!listRes.keys || listRes.keys.length===0){
+      notesListEl.innerHTML = '<div class="sf-note-empty">No notes saved yet.</div>';
+      return;
+    }
+    for(const key of listRes.keys.slice().reverse()){
+      const res = await LocalStorageStorage.get(key);
+      try{
+        const obj = JSON.parse(res.value);
+        const item = document.createElement('div');
+        item.className = 'sf-note-item' + (state.activeNoteKey===key ? ' active' : '');
+        item.innerHTML = `<div class="sf-note-item-title">${escapeHtml(obj.title || 'Untitled note')}</div><div class="sf-note-item-meta">${escapeHtml(obj.course||'')}</div>`;
+        item.addEventListener('click', ()=>{
+          state.activeNoteKey = key;
+          noteTitleEl.value = obj.title || '';
+          noteBodyEl.value = obj.body || '';
+          document.querySelectorAll('.sf-note-item').forEach(n=>n.classList.remove('active'));
+          item.classList.add('active');
+        });
+        notesListEl.appendChild(item);
+      }catch(e){}
+    }
+  }
+
+  document.getElementById('sf-note-new').addEventListener('click', ()=>{
+    clearNoteEditor();
+    document.querySelectorAll('.sf-note-item').forEach(n=>n.classList.remove('active'));
+  });
+
+  document.getElementById('sf-note-save').addEventListener('click', async ()=>{
+    const title = noteTitleEl.value.trim() || 'Untitled note';
+    const body = noteBodyEl.value.trim();
+    const key = state.activeNoteKey || ('note:' + Date.now());
+    await LocalStorageStorage.set(key, JSON.stringify({title, body, course: courseEl.value}));
+    state.activeNoteKey = key;
+    loadNotesList();
+  });
+
+  document.getElementById('sf-note-delete').addEventListener('click', async ()=>{
+    if(!state.activeNoteKey) return;
+    await LocalStorageStorage.delete(state.activeNoteKey);
+    clearNoteEditor();
+    loadNotesList();
+  });
+
+  document.getElementById('sf-note-use').addEventListener('click', ()=>{
+    notesEl.value = noteBodyEl.value;
+    document.querySelector('.sf-menu-item[data-tab="home"]').click();
+  });
+
+  /* SETTINGS */
+  const settingsMsg = document.getElementById('sf-settings-msg');
+  const fontOptsEl = document.getElementById('sf-font-opts');
+  const themeOptsEl = document.getElementById('sf-theme-opts');
+  const fileInput = document.getElementById('sf-file-input');
+  const fileTrigger = document.getElementById('sf-file-trigger');
+  const fileNameEl = document.getElementById('sf-file-name');
+
+  function flashSettingsSaved(){
+    settingsMsg.style.display = 'block';
+    setTimeout(()=>{ settingsMsg.style.display = 'none'; }, 1600);
+  }
+
+  fontOptsEl.querySelectorAll('.sf-font-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      fontOptsEl.querySelectorAll('.sf-font-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      rootEl.style.setProperty('--text-scale', btn.dataset.scale);
+      localStorage.setItem('fontScale', btn.dataset.scale);
+      flashSettingsSaved();
+    });
+  });
+
+  themeOptsEl.querySelectorAll('.sf-theme-swatch').forEach(sw=>{
+    sw.addEventListener('click', async ()=>{
+      themeOptsEl.querySelectorAll('.sf-theme-swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      rootEl.setAttribute('data-theme', sw.dataset.theme);
+      localStorage.setItem('theme', sw.dataset.theme);
+      flashSettingsSaved();
+    });
+  });
+
+  fileTrigger.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    fileNameEl.textContent = 'Reading ' + file.name + '…';
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      const content = String(reader.result || '');
+      const key = 'note:' + Date.now();
+      await LocalStorageStorage.set(key, JSON.stringify({ title: file.name, body: content, course: courseEl.value }));
+      fileNameEl.textContent = 'Imported "' + file.name + '" into Notes.';
+      flashSettingsSaved();
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('sf-clear-sets').addEventListener('click', async ()=>{
+    const listRes = await LocalStorageStorage.list('set:');
+    for(const k of listRes.keys) { await LocalStorageStorage.delete(k); }
+    loadSavedList();
+    flashSettingsSaved();
+  });
+
+  document.getElementById('sf-clear-notes').addEventListener('click', async ()=>{
+    const listRes = await LocalStorageStorage.list('note:');
+    for(const k of listRes.keys) { await LocalStorageStorage.delete(k); }
+    clearNoteEditor();
+    loadNotesList();
+    flashSettingsSaved();
+  });
+
+  // Init prefs
+  if(localStorage.getItem('fontScale')){
+    rootEl.style.setProperty('--text-scale', localStorage.getItem('fontScale'));
+    fontOptsEl.querySelectorAll('.sf-font-btn').forEach(b=>b.classList.toggle('active', b.dataset.scale===localStorage.getItem('fontScale')));
+  }
+  if(localStorage.getItem('theme')){
+    rootEl.setAttribute('data-theme', localStorage.getItem('theme'));
+    themeOptsEl.querySelectorAll('.sf-theme-swatch').forEach(s=>s.classList.toggle('active', s.dataset.theme===localStorage.getItem('theme')));
+  }
+
+  loadSavedList();
+})();
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
